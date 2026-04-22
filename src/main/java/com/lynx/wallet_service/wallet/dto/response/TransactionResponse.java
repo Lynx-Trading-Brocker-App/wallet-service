@@ -9,14 +9,12 @@ import java.util.UUID;
 
 @Data
 @Builder
-public class WalletResponse {
+public class TransactionResponse {
 
     private UUID id;
-    private UUID userId;
-    private String currency;
-    private BigDecimal availableBalance;
-    private BigDecimal reservedBalance;
+    private UUID walletId;
+    private UUID referenceId;
+    private String transactionType;
+    private BigDecimal amount;
     private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-    private boolean isActive;
 }
