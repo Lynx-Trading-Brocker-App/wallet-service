@@ -1,0 +1,49 @@
+package com.lynx.wallet_service.common;
+
+import com.lynx.wallet_service.wallet.exception.InsufficientFundsException;
+import com.lynx.wallet_service.wallet.exception.WalletNotFoundException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.util.HashMap;
+import java.util.Map;
+
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(WalletNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleWalletNotFound(WalletNotFoundException ex) {
+        return buildError("NOT_FOUND", ex.getMessage(), new HashMap<>(), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(InsufficientFundsException.class)
+    public ResponseEntity<Map<String, Object>> handleInsufficientFunds(InsufficientFundsException ex) {
+        return buildError("INSUFFICIENT_FUNDS", ex.getMessage(), new HashMap<>(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex) {
+        Map<String, String> details = new HashMap<>();
+        for (FieldError error : ex.getBindingResult().getFieldErrors()) {
+            details.put(error.getField(), error.getDefaultMessage());
+        }
+        return buildError("VALIDATION_ERROR", "The request payload failed validation.", details, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, Object>> handleGeneral(Exception ex) {
+        return buildError("INTERNAL_SERVER_ERROR", "Something went wrong on the server.", new HashMap<>(), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    private ResponseEntity<Map<String, Object>> buildError(String code, String message,
+                                                           Map<String, String> details, HttpStatus status) {
+        ErrorResponse error = new ErrorResponse(code, message, details);
+        Map<String, Object> body = new HashMap<>();
+        body.put("error", error);
+        return new ResponseEntity<>(body, status);
+    }
+}
