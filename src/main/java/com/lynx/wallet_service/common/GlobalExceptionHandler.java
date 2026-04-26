@@ -1,9 +1,11 @@
 package com.lynx.wallet_service.common;
 
 import com.lynx.wallet_service.wallet.exception.InsufficientFundsException;
+import com.lynx.wallet_service.wallet.exception.InsufficientReservedBalanceException;
 import com.lynx.wallet_service.wallet.exception.WalletNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -23,6 +25,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InsufficientFundsException.class)
     public ResponseEntity<Map<String, Object>> handleInsufficientFunds(InsufficientFundsException ex) {
         return buildError("INSUFFICIENT_FUNDS", ex.getMessage(), new HashMap<>(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(InsufficientReservedBalanceException.class)
+    public ResponseEntity<Map<String, Object>> handleInsufficientReservedBalance(InsufficientReservedBalanceException ex) {
+        return buildError("INSUFFICIENT_RESERVED_BALANCE", ex.getMessage(), new HashMap<>(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<Map<String, Object>> handleUnreadableMessage(HttpMessageNotReadableException ex) {
+        return buildError("VALIDATION_ERROR", "The request payload failed validation.", new HashMap<>(), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

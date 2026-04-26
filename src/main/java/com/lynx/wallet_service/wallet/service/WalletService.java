@@ -6,6 +6,7 @@ import com.lynx.wallet_service.wallet.entity.Wallet;
 import com.lynx.wallet_service.wallet.entity.WalletTransaction;
 import com.lynx.wallet_service.wallet.entity.TransactionType;
 import com.lynx.wallet_service.wallet.exception.InsufficientFundsException;
+import com.lynx.wallet_service.wallet.exception.InsufficientReservedBalanceException;
 import com.lynx.wallet_service.wallet.exception.WalletNotFoundException;
 import com.lynx.wallet_service.wallet.repository.WalletRepository;
 import com.lynx.wallet_service.wallet.repository.WalletTransactionRepository;
@@ -104,6 +105,11 @@ public class WalletService {
     public void releaseFunds(ReleaseFundsRequest request) {
         Wallet wallet = findWalletByUserAndCurrency(request.getUserId(), request.getCurrency());
 
+        if (wallet.getReservedBalance().compareTo(request.getAmount()) < 0) {
+            throw new InsufficientReservedBalanceException(
+                    "Cannot release more than the reserved balance.");
+        }
+
         wallet.setReservedBalance(wallet.getReservedBalance().subtract(request.getAmount()));
         wallet.setAvailableBalance(wallet.getAvailableBalance().add(request.getAmount()));
         walletRepository.save(wallet);
@@ -119,6 +125,11 @@ public class WalletService {
     @Transactional
     public void captureFunds(CaptureFundsRequest request) {
         Wallet wallet = findWalletByUserAndCurrency(request.getUserId(), request.getCurrency());
+
+        if (wallet.getReservedBalance().compareTo(request.getReservedAmount()) < 0) {
+            throw new InsufficientReservedBalanceException(
+                    "Cannot capture more than the reserved balance.");
+        }
 
         wallet.setReservedBalance(wallet.getReservedBalance().subtract(request.getReservedAmount()));
 
