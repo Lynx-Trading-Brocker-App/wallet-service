@@ -109,6 +109,12 @@ public class WalletService {
     // ─── Internal operations (called by Order Service) ────────────────────────
 
     @Transactional
+    public Wallet createWalletforUser(CreateWalletRequest request) {
+        UUID userId = request.getUserId();
+        return createWallet(userId, "USD");
+    }
+
+    @Transactional
     public void reserveFunds(ReserveFundsRequest request) {
         Wallet wallet = findWalletByUserAndCurrency(request.getUserId(), request.getCurrency());
 

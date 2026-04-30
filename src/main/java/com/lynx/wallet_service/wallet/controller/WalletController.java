@@ -71,4 +71,11 @@ public class WalletController {
         walletService.captureFunds(request);
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping("/create-wallet")
+    public ResponseEntity<Void> createWallet(
+            @Valid @RequestBody CreateWalletRequest request){
+        walletService.createWalletforUser(request);
+        return ResponseEntity.ok().build();
+    }
 }
