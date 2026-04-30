@@ -40,6 +40,15 @@ public class WalletController {
         return ResponseEntity.ok(walletService.getWallet(userId, currency));
     }
 
+    @GetMapping("/transactions")
+    public ResponseEntity<TransactionHistoryResponse> getTransactionHistory(
+            @RequestHeader("X-User-Id") UUID userId,
+            @RequestParam String currency,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int limit) {
+        return ResponseEntity.ok(walletService.getTransactionHistory(userId, currency, page, limit));
+    }
+
     // ─── Internal endpoints (called by Order Service) ─────────────────────────
 
     @PostMapping("/reserve")

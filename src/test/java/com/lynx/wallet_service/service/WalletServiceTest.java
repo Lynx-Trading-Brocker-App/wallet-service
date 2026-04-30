@@ -17,9 +17,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -303,6 +307,42 @@ class WalletServiceTest {
                 .thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> walletService.getWallet(userId, "USD"))
+                .isInstanceOf(WalletNotFoundException.class);
+    }
+
+    @Test
+    void getTransactionHistory_shouldReturnPaginatedTransactions() {
+        WalletTransaction transaction = WalletTransaction.builder()
+                .id(UUID.randomUUID())
+                .walletId(wallet.getId())
+                .transactionType(TransactionType.DEPOSIT)
+                .amount(new BigDecimal("1000.00"))
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        Page<WalletTransaction> page = new PageImpl<>(List.of(transaction));
+
+        when(walletRepository.findByUserIdAndCurrency(userId, "USD"))
+                .thenReturn(Optional.of(wallet));
+        when(walletTransactionRepository.findAllByWalletId(any(UUID.class), any(Pageable.class)))
+                .thenReturn(page);
+
+        TransactionHistoryResponse response = walletService.getTransactionHistory(userId, "USD", 1, 10);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getTransactions()).hasSize(1);
+        assertThat(response.getTotalRecords()).isEqualTo(1);
+        assertThat(response.getCurrentPage()).isEqualTo(1);
+        assertThat(response.getTotalPages()).isEqualTo(1);
+        assertThat(response.getLimit()).isEqualTo(10);
+    }
+
+    @Test
+    void getTransactionHistory_shouldThrowWalletNotFoundException() {
+        when(walletRepository.findByUserIdAndCurrency(userId, "USD"))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> walletService.getTransactionHistory(userId, "USD", 1, 10))
                 .isInstanceOf(WalletNotFoundException.class);
     }
 }
