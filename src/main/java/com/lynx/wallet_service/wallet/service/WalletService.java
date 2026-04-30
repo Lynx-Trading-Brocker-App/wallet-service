@@ -11,11 +11,17 @@ import com.lynx.wallet_service.wallet.exception.WalletNotFoundException;
 import com.lynx.wallet_service.wallet.repository.WalletRepository;
 import com.lynx.wallet_service.wallet.repository.WalletTransactionRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -77,6 +83,27 @@ public class WalletService {
     public WalletResponse getWallet(UUID userId, String currency) {
         Wallet wallet = findWalletByUserAndCurrency(userId, currency);
         return toWalletResponse(wallet);
+    }
+
+    public TransactionHistoryResponse getTransactionHistory(UUID userId, String currency, int page, int limit) {
+        Wallet wallet = findWalletByUserAndCurrency(userId, currency);
+
+        Pageable pageable = PageRequest.of(page - 1, limit, Sort.by("createdAt").descending());
+        Page<WalletTransaction> transactionPage = walletTransactionRepository
+                .findAllByWalletId(wallet.getId(), pageable);
+
+        List<TransactionResponse> transactions = transactionPage.getContent()
+                .stream()
+                .map(this::toTransactionResponse)
+                .collect(Collectors.toList());
+
+        return TransactionHistoryResponse.builder()
+                .transactions(transactions)
+                .totalRecords(transactionPage.getTotalElements())
+                .currentPage(page)
+                .totalPages(transactionPage.getTotalPages())
+                .limit(limit)
+                .build();
     }
 
     // ─── Internal operations (called by Order Service) ────────────────────────
