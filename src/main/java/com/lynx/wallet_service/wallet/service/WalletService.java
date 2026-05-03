@@ -11,6 +11,7 @@ import com.lynx.wallet_service.wallet.exception.WalletNotFoundException;
 import com.lynx.wallet_service.wallet.repository.WalletRepository;
 import com.lynx.wallet_service.wallet.repository.WalletTransactionRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
